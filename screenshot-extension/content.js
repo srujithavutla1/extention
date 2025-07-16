@@ -1,0 +1,151 @@
+
+
+// content.js
+(() => {
+  if (window.__screenshot_injected) return;
+  window.__screenshot_injected = true;
+
+  let selectionDiv = null;
+  let startX, startY;
+
+  // Listen for messages from the background script
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'initiateSelection') {
+      initiateSelection(request.dataUrl);
+    } else if (request.action === 'captureFullscreen' || request.action === 'displayCroppedImage') {
+      showModal(request.dataUrl);
+    }
+  });
+  function initiateSelection(fullPageDataUrl) {
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+  overlay.style.cursor = 'crosshair';
+  overlay.style.zIndex = '99999999';
+
+  const handleMouseDown = (e) => {
+    startX = e.clientX;
+    startY = e.clientY;
+
+    // Prevent multiple rectangles
+    overlay.removeEventListener('mousedown', handleMouseDown);
+
+    selectionDiv = document.createElement('div');
+    selectionDiv.style.position = 'fixed';
+    selectionDiv.style.border = '2px dashed #fff';
+    selectionDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+    selectionDiv.style.left = `${startX}px`;
+    selectionDiv.style.top = `${startY}px`;
+    selectionDiv.style.zIndex = '100000000';
+    document.body.appendChild(selectionDiv);
+
+    const onMouseMove = (moveEvent) => {
+      const width = moveEvent.clientX - startX;
+      const height = moveEvent.clientY - startY;
+      selectionDiv.style.width = `${Math.abs(width)}px`;
+      selectionDiv.style.height = `${Math.abs(height)}px`;
+      selectionDiv.style.left = `${width > 0 ? startX : moveEvent.clientX}px`;
+      selectionDiv.style.top = `${height > 0 ? startY : moveEvent.clientY}px`;
+    };
+
+    const onMouseUp = (upEvent) => {
+      overlay.removeEventListener('mousemove', onMouseMove);
+      overlay.removeEventListener('mouseup', onMouseUp);
+      if (document.body.contains(overlay)) document.body.removeChild(overlay);
+      if (document.body.contains(selectionDiv)) document.body.removeChild(selectionDiv);
+
+      const x = Math.min(startX, upEvent.clientX);
+      const y = Math.min(startY, upEvent.clientY);
+      const width = Math.abs(startX - upEvent.clientX);
+      const height = Math.abs(startY - upEvent.clientY);
+
+      if (width > 10 && height > 10) {
+        cropImage(fullPageDataUrl, { x, y, width, height });
+      }
+    };
+
+    overlay.addEventListener('mousemove', onMouseMove);
+    overlay.addEventListener('mouseup', onMouseUp, { once: true });
+  };
+
+  overlay.addEventListener('mousedown', handleMouseDown);
+  document.body.appendChild(overlay);
+}
+
+  function cropImage(dataUrl, area) {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const devicePixelRatio = window.devicePixelRatio || 1;
+
+      canvas.width = area.width * devicePixelRatio;
+      canvas.height = area.height * devicePixelRatio;
+
+      ctx.drawImage(
+        image,
+        area.x * devicePixelRatio,
+        area.y * devicePixelRatio,
+        area.width * devicePixelRatio,
+        area.height * devicePixelRatio,
+        0,
+        0,
+        area.width * devicePixelRatio,
+        area.height * devicePixelRatio
+      );
+
+      showModal(canvas.toDataURL('image/png'));
+    };
+    image.src = dataUrl;
+  }
+
+  function showModal(dataUrl) {
+    const existingModal = document.getElementById('screenshot-modal-container');
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'screenshot-modal-container';
+    modalContainer.style.position = 'fixed';
+    modalContainer.style.top = '0';
+    modalContainer.style.left = '0';
+    modalContainer.style.width = '100vw';
+    modalContainer.style.height = '100vh';
+    modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
+    modalContainer.style.display = 'flex';
+    modalContainer.style.alignItems = 'center';
+    modalContainer.style.justifyContent = 'center';
+    modalContainer.style.zIndex = '100000001';
+
+    modalContainer.innerHTML = `
+      <div style="background-color: #1e293b; border-radius: 0.5rem; padding: 1.5rem; width: 50%; max-height: 90vh; display: flex; flex-direction: column;">
+        <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; color: white;">Screenshot Captured</h2>
+        <div style="flex-grow: 1; overflow: auto; margin-bottom: 1rem; border: 1px solid #475569; border-radius: 0.25rem;">
+          <img id="screenshot-image" src="${dataUrl}" style="width: 100%; height: auto;" />
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+          <button id="close-modal-btn" style="padding: 0.5rem 1rem; background-color: #4b5563; color: white; border-radius: 0.25rem; cursor: pointer;">Close</button>
+          <a id="download-btn" href="${dataUrl}" download="screenshot.png" style="padding: 0.5rem 1rem; background-color: #2563eb; color: white; border-radius: 0.25rem; text-decoration: none;">Download</a>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modalContainer);
+
+    document.getElementById('close-modal-btn').addEventListener('click', () => {
+      modalContainer.remove();
+    });
+
+    document.addEventListener('keydown', function close(e) {
+      if (e.key === 'Escape') {
+        modalContainer.remove();
+        document.removeEventListener('keydown', close);
+      }
+    });
+  }
+})();
