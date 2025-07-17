@@ -1,9 +1,8 @@
-// background.js
 let collectedData = {}; // Store data for the current capture session
 // Keep track of tabs where debugger is attached for cleaner detachment
 const attachedDebuggerTabs = new Set();
 // A simple way to track which tab's debugger events we are currently collecting for the report
-let currentCollectingTabId = null; 
+let currentCollectingTabId = null;
 
 // Global debugger event listener to avoid re-adding it multiple times
 // This function will collect network and console logs into `collectedData`
@@ -18,10 +17,22 @@ function debuggerEventListener(source, method, params) {
                 url: params.request.url,
                 method: params.request.method,
                 timestamp: new Date(params.timestamp * 1000).toLocaleString(), // Convert to milliseconds
+                // You can add more details here if needed, e.g., headers, body, etc.
+                // headers: params.request.headers // Example
             });
-        } else if (method === 'Log.entryAdded') {
+        } else if (method === 'Network.responseReceived') {
+            // Optional: Capture response details
+            if (!collectedData.networkCalls) collectedData.networkCalls = [];
+            const call = collectedData.networkCalls.find(c => c.requestId === params.requestId);
+            if (call) {
+                call.statusCode = params.response.status;
+                call.statusText = params.response.statusText;
+                call.mimeType = params.response.mimeType;
+            }
+        }
+        else if (method === 'Log.entryAdded') {
             if (!collectedData.consoleLogs)
-               collectedData.consoleLogs = [];
+                collectedData.consoleLogs = [];
             collectedData.consoleLogs.push({
                 level: params.entry.level,
                 text: params.entry.text,
@@ -81,7 +92,7 @@ async function captureAndInject(action, area = null) {
             consoleLogs: [],  // Initialize explicitly
             debuggerWarning: "Failed to attach debugger. Network and console logs may be incomplete." // Default warning
         };
-        
+
         currentCollectingTabId = tab.id; // Set the tab ID we are currently collecting data for
 
         // Attempt to attach debugger API for network/console logs
@@ -108,12 +119,13 @@ async function captureAndInject(action, area = null) {
             // Clear the warning if attachment was successful
             collectedData.debuggerWarning = null;
 
-            // --- NEW CODE: Force a reload to capture network requests from page load ---
+            // --- IMPORTANT CHANGE: Force a reload to capture network requests from page load ---
             console.log(`Reloading tab ${tab.id} to capture network events...`);
             await chrome.tabs.reload(tab.id, { bypassCache: true }); // bypassCache ensures fresh requests
 
             // Give a small delay to allow the reload to begin and initial requests to fire
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Increased delay to 1 second
+            // This is crucial to let the debugger capture initial requests.
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Increased delay to 1.5 seconds
 
         } catch (e) {
             console.warn("Could not attach debugger API. This is usually due to user declining the prompt or DevTools being open.", e);
@@ -126,7 +138,7 @@ async function captureAndInject(action, area = null) {
             files: ['content.js'],
         });
 
-        // Capture the visible tab
+        // Capture the visible tab AFTER debugger is attached and reload has happened.
         const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
 
         // Store the screenshot data temporarily

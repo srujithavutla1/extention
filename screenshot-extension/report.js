@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.networkCalls && response.networkCalls.length > 0) {
                 response.networkCalls.forEach(call => {
                     const callEntry = document.createElement('div');
-                    callEntry.innerHTML = `<strong>[${call.method}] ${call.timestamp}</strong>: ${call.url}`;
+                    callEntry.innerHTML = `<strong>[${call.method}] ${call.statusCode || ''}] ${call.timestamp}</strong>: ${call.url} ${call.mimeType ? `(${call.mimeType})` : ''}`;
                     networkCallsDiv.appendChild(callEntry);
                 });
             } else {

@@ -1,4 +1,3 @@
-// content.js
 (() => {
     if (window.__screenshot_injected) return;
     window.__screenshot_injected = true;
@@ -47,15 +46,20 @@
             showModal(request.dataUrl);
         }
 
+        // This part needs to ensure collectedData in background is updated before querying it
         if (request.requestClientInfo) {
-            sendClientSideInfo(request.dataUrl, request.area);
+            // Send client-side info first
+            sendClientSideInfo(); // No need for screenshotDataUrl and area here, background script already has it.
 
-            // Removed setTimeout here, as the debuggerWarning should be present by now
-            chrome.runtime.sendMessage({ action: 'getReportData' }, (response) => {
-                if (response && response.debuggerWarning) {
-                    showNetworkPrompt();
-                }
-            });
+            // Request report data after client info is sent (and debugger attachment status is set in background)
+            // A small delay here can help if background script is still processing.
+            setTimeout(() => {
+                chrome.runtime.sendMessage({ action: 'getReportData' }, (response) => {
+                    if (response && response.debuggerWarning) {
+                        showNetworkPrompt();
+                    }
+                });
+            }, 500); // Give a small delay for background script to process
         }
     });
 
@@ -141,8 +145,9 @@
             );
 
             showModal(canvas.toDataURL('image/png'));
-            // Send client-side info after cropping and showing modal
-            sendClientSideInfo(canvas.toDataURL('image/png'), area);
+            // sendClientSideInfo is now called after the modal is shown,
+            // and the background script will get the screenshot data separately.
+            sendClientSideInfo(); // No need for dataUrl and area here
         };
         image.src = dataUrl;
     }
@@ -194,7 +199,7 @@
     }
 
     // New function to send client-side information
-    function sendClientSideInfo(screenshotDataUrl, area) {
+    function sendClientSideInfo() { // Removed parameters, as screenshot data is handled in background.js
         const info = {
             url: window.location.href,
             timestamp: new Date().toLocaleString(),
@@ -202,7 +207,7 @@
             browser: navigator.userAgent, // More detailed parsing would be needed for cleaner browser version
             windowSize: `${window.innerWidth}x${window.innerHeight}`,
             country: "N/A" // Geolocation is generally not allowed without user prompt from content script
-                            // For country, you'd typically need a separate service or IP-based lookup
+                                    // For country, you'd typically need a separate service or IP-based lookup
         };
 
         chrome.runtime.sendMessage({
