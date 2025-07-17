@@ -1,0 +1,91 @@
+
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 30px;
+}
+
+h2 {
+    color: #0056b3;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+.screenshot-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#report-screenshot {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+#download-screenshot-btn {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+#download-screenshot-btn:hover {
+    background-color: #218838;
+}
+
+.info-section p {
+    margin: 8px 0;
+}
+
+.log-output {
+    background-color: #eee;
+    border: 1px solid #ddd;
+    padding: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap; /* Preserve whitespace and wrap text */
+    word-wrap: break-word; /* Break long words */
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    border-radius: 4px;
+}
+
+.log-output div {
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #ccc;
+}
+
+.log-output div:last-child {
+    border-bottom: none;
+}
+
+.warning {
+    color: #dc3545;
+    font-weight: bold;
+    margin-top: 10px;
+}

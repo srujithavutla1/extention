@@ -1,27 +1,37 @@
 {
-  "manifest_version": 3,
-  "name": "Quick Screenshot",
-  "version": "1.0",
-  "description": "Capture the current tab or a selected area.",
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "tabCapture"
-  ],
-  "background": {
-    "service_worker": "background.js"
-  },
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
-  },
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  }
+    "manifest_version": 3,
+    "name": "Quick Screenshot & Bug Report",
+    "version": "1.0",
+    "description": "Capture the current tab or a selected area with diagnostic information.",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "tabCapture",
+        "storage",
+        "debugger",
+        "webNavigation"
+    ],
+    "host_permissions": ["<all_urls>"],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icons/icon16.png",
+            "48": "icons/icon48.png",
+            "128": "icons/icon128.png"
+        }
+    },
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "web_accessible_resources": [
+        {
+            "resources": ["report.html", "report.css", "report.js"],
+            "matches": ["<all_urls>"]
+        }
+    ]
 }

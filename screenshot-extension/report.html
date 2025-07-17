@@ -1,0 +1,48 @@
+<!-- report.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Report</title>
+    <link href="report.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Screenshot Bug Report</h1>
+
+        <section class="screenshot-section">
+            <h2>Screenshot</h2>
+            <img id="report-screenshot" src="" alt="Captured Screenshot">
+            <a id="download-screenshot-btn" download="screenshot.png">Download Screenshot</a>
+        </section>
+
+        <section class="info-section">
+            <h2>System Information</h2>
+            <p><strong>URL:</strong> <span id="info-url"></span></p>
+            <p><strong>Timestamp:</strong> <span id="info-timestamp"></span></p>
+            <p><strong>OS:</strong> <span id="info-os"></span></p>
+            <p><strong>Browser:</strong> <span id="info-browser"></span></p>
+            <p><strong>Window Size:</strong> <span id="info-window-size"></span></p>
+            <p><strong>Country:</strong> <span id="info-country"></span></p>
+            <p id="debugger-warning" class="warning"></p>
+        </section>
+
+        <section class="console-section">
+            <h2>Console Logs</h2>
+            <div id="console-logs" class="log-output"></div>
+        </section>
+
+        <section class="network-section">
+            <h2>Network Calls</h2>
+            <div id="network-calls" class="log-output"></div>
+        </section>
+
+        <section class="actions-section">
+            <h2>User Actions</h2>
+            <div id="user-actions" class="log-output"></div>
+        </section>
+    </div>
+    <script src="report.js"></script>
+</body>
+</html>
