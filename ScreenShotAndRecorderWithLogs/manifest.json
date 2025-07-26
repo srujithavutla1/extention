@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "RecordAndCapture",
+  "version": "1.0",
+  "description": "Record tabs with pause/resume/preview, and capture full-page or selected-area screenshots.",
+  "permissions": [
+    "offscreen",
+    "storage",
+    "scripting",
+    "tabs",
+    "downloads",
+    "activeTab",
+    "debugger",
+    "tabCapture"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["offscreen.html","tab-capture.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
